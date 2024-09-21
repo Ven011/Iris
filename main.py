@@ -32,7 +32,6 @@ root.title("Date Counter and Weight Estimator")
 
 # main menu holder
 main_holder = tk.Label(root)
-
 main_holder.pack(fill="both", expand=True)
 
 for i in range(3):
@@ -53,25 +52,63 @@ weight_label = tk.Label(main_holder, font=("Helvetica", 25, "bold"), borderwidth
 count_label.grid(row=1, column=0, columnspan=2, sticky="nsew", padx=20, pady=20)
 weight_label.grid(row=2, column=0, columnspan=2, sticky="nsew", padx=20, pady=20)
 
+# notification widgets
+starting_notif = tk.Label(root, font=("Helvetica", 25, "bold"), text="STARTING OPERATION!", borderwidth=4, relief="solid", padx=20, pady=20, bg="white")
+ending_notif = tk.Label(root, font=("Helvetica", 25, "bold"), text="ENDING OPERATION!", borderwidth=4, relief="solid", padx=20, pady=20, bg="white")
+start_before_stop_notif = tk.Label(root, font=("Helvetica", 25, "bold"), text="OPERATION HAS NOT BEEN STARTED!", borderwidth=4, relief="solid", padx=20, pady=20, bg="white")
+already_started_notif = tk.Label(root, font=("Helvetica", 25, "bold"), text="OPERATION HAS ALREADY STARTED!", borderwidth=4, relief="solid", padx=20, pady=20, bg="white")
+
+notifications = [starting_notif, ending_notif, start_before_stop_notif, already_started_notif]
+notification_up = False
+
+def toggle_notification(num):
+    global notifications, notification_up
+    
+    if not notification_up:
+        notifications[num].place(relx=0.5, rely=0.5, anchor=tk.CENTER)
+        notification_up = True
+        root.after(6000, lambda: toggle_notification(num))
+    elif notification_up:
+        notifications[num].place_forget()
+        notification_up = False
+
 def handle_start():
     global started, operation_start
     operation_start = time()
-    started = True if not started else started
+    
+    #notify
+    if started:
+        toggle_notification(3)
+    elif not started:
+        started = True
+        toggle_notification(0)
 
 def handle_stop():
-    global started, operation_end
-    cupid.reset()
-    operation_end = time()
-    # send email with date count, total weight, count start and end times
-    subject = "Date Counter Report"
-    date_and_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    body = f"Operation date and end time: {date_and_time}, Dates counted: {date_count}, Estimated total weight: {round(date_weight/1000, 4)} kg"
+    global started, operation_end, date_count, date_weight
     
-    # send email to recipients
-    send_email(subject, body, get_setting("email_settings")["recipient1_email"])
-    send_email(subject, body, get_setting("email_settings")["recipient2_email"])
-
-    started = False if started else started
+    #notify
+    if not started:
+        toggle_notification(2)
+    elif started:
+        started = False
+        toggle_notification(1)
+        
+        cupid.reset()
+        operation_end = time()
+    
+        # send email with date count, total weight, count start and end times
+        subject = "Date Counter Report"
+        date_and_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        body = f"Operation date and end time: {date_and_time}, Dates counted: {date_count}, Estimated total weight: {round(date_weight/1000, 4)} kg"
+        
+        # send email to recipients
+        send_email(subject, body, get_setting("email_settings")["recipient1_email"])
+        send_email(subject, body, get_setting("email_settings")["recipient2_email"])
+        
+        # reset count and weight on display
+        date_count = 0
+        date_weight = 0
+        update_count_weight()
 
 # main menu buttons
 start_button = tk.Button(main_holder, text="START", bg="green", font=("Helvetica", 30, "bold"),

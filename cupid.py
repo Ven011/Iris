@@ -7,15 +7,15 @@
 
 import pyrealsense2 as rs2
 import cv2
-import numpy as np 
+import numpy as np
 
 from time import time
 from rectifier import Rectifier
 from settings import get_setting
 
 # initialize image rectifier
-start_x = 96
-start_y = 96
+start_x = 0
+start_y = 0
 end_x = 480
 end_y = 480
 
@@ -63,6 +63,8 @@ class Cupid:
         self.compare_frame = None
 
         # date counting variables
+        self.counted = [] # list of date IDs that have been counted
+        self.counted_last_empty_time = time()
         self.count = 0
         self.weight = 0
         self.profile_counter = 0
@@ -155,7 +157,8 @@ class Cupid:
     def handle_matches(self):
         # take care of profiles that have left the frame
         for profile in self.base_profiles:
-            if not profile.matched:
+            if profile.position[1] > FREEZE_LINE and profile.id not in self.counted:
+                self.counted.append(profile.id)
                 self.count+=1
                 self.weight+=profile.est_weight
 
@@ -173,13 +176,18 @@ class Cupid:
             self.get_base_profiles()
         self.get_compare_profiles()
         matches_found = self.find_matches()
+        
+        # empty counted after some time
+        if time() - self.counted_last_empty_time > 10:
+                self.counted_last_empty_time = time()
+                self.counted = []
 
         if matches_found:
             self.handle_matches()
         else:
             pass
 
-        cv2.putText(self.compare_frame, str(self.weight), (20, 20), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2, cv2.LINE_AA)
+        #cv2.putText(self.compare_frame, str(self.weight), (20, 20), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2, cv2.LINE_AA)
 
         for profile in self.base_profiles:
             cv2.putText(self.compare_frame, str(profile.id), tuple(profile.position), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2, cv2.LINE_AA)
