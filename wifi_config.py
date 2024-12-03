@@ -2,11 +2,11 @@
 
 import os
 
-from settings import get_setting
+from settings import settings.get_setting
 
 # Wi-Fi configuration details
-ssid = get_setting("wifi_settings")["ssid"]
-psk = get_setting("wifi_settings")["password"]
+ssid = settings.get_setting("wifi_settings")["ssid"]
+psk = settings.get_setting("wifi_settings")["password"]
 country = "US"  # Adjust this to your country code
 
 # Path to the wpa_supplicant configuration file

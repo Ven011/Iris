@@ -3,7 +3,7 @@
 import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
-from settings import get_setting
+from settings import settings
 
 # Email configuration
 smtp_server = "smtp.gmail.com"  # Replace with your SMTP server

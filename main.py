@@ -4,9 +4,10 @@ import cv2
 import tkinter as tk
 import numpy as np
 
+from tkinter import messagebox
 from cupid import Cupid
 from PIL import Image, ImageTk
-from settings import get_setting
+from settings import settings
 from datetime import datetime
 from time import time
 from email_sender import send_email
@@ -21,20 +22,20 @@ started = False
 operation_start = 0
 operation_end = 0
 
-# user variables
-DATE_REPORT_FREQ = 50 # milliseconds between consecutive date reports
+DATE_REPORT_FREQ = 200 # milliseconds between consecutive date reports
 COUNT_WEIGHT_FREQ = 200 # milliseconds between date count and weight text in the main menu
 
 # setup tkinter
 root = tk.Tk()
-root.attributes("-fullscreen", True)
+# root.attributes("-fullscreen", True)
+root.geometry("1920x1080")
 root.title("Date Counter and Weight Estimator")
 
-# main menu holder
-main_holder = tk.Label(root)
+# main menu ------------------------------------------------------------------------
+main_holder = tk.Frame(root)
 main_holder.pack(fill="both", expand=True)
 
-for i in range(3):
+for i in range(3): 
     main_holder.grid_columnconfigure(i, weight=1, uniform="equal")
 
 main_holder.grid_rowconfigure(0, weight=1)
@@ -43,7 +44,7 @@ main_holder.grid_rowconfigure(2, weight=1)
 
 # image holder
 image_label = tk.Label(main_holder, borderwidth=2, relief="solid", text="CAMERA VIEW", compound="bottom", font=("Helvetica", 20, "bold"))
-image_label.grid(row=0, column=2, rowspan=3, sticky="nsew" , padx=20, pady=20)
+image_label.grid(row=1, column=2, rowspan=2, sticky="nsew" , padx=20, pady=20)
 
 # count and weight text widgets
 count_label = tk.Label(main_holder, font=("Helvetica", 25, "bold"), borderwidth=2, relief="solid")
@@ -52,46 +53,80 @@ weight_label = tk.Label(main_holder, font=("Helvetica", 25, "bold"), borderwidth
 count_label.grid(row=1, column=0, columnspan=2, sticky="nsew", padx=20, pady=20)
 weight_label.grid(row=2, column=0, columnspan=2, sticky="nsew", padx=20, pady=20)
 
-# notification widgets
-starting_notif = tk.Label(root, font=("Helvetica", 25, "bold"), text="STARTING OPERATION!", borderwidth=4, relief="solid", padx=20, pady=20, bg="white")
-ending_notif = tk.Label(root, font=("Helvetica", 25, "bold"), text="ENDING OPERATION!", borderwidth=4, relief="solid", padx=20, pady=20, bg="white")
-start_before_stop_notif = tk.Label(root, font=("Helvetica", 25, "bold"), text="OPERATION HAS NOT BEEN STARTED!", borderwidth=4, relief="solid", padx=20, pady=20, bg="white")
-already_started_notif = tk.Label(root, font=("Helvetica", 25, "bold"), text="OPERATION HAS ALREADY STARTED!", borderwidth=4, relief="solid", padx=20, pady=20, bg="white")
+# settings widgets 
+settings_holder = tk.Label(main_holder)
+settings_holder.grid(row=0, column=2, sticky="nsew", columnspan=1, padx=20, pady=20)
 
-notifications = [starting_notif, ending_notif, start_before_stop_notif, already_started_notif]
-notification_up = False
+for i in range(2):
+    settings_holder.grid_columnconfigure(i, weight=1, uniform="equal")
+    settings_holder.grid_rowconfigure(i, weight=1, uniform="equal")
 
-def toggle_notification(num):
-    global notifications, notification_up
-    
-    if not notification_up:
-        notifications[num].place(relx=0.5, rely=0.5, anchor=tk.CENTER)
-        notification_up = True
-        root.after(6000, lambda: toggle_notification(num))
-    elif notification_up:
-        notifications[num].place_forget()
-        notification_up = False
+wifi_status = tk.Label(settings_holder, borderwidth=2, relief="solid", text="WiFi STATUS", font=("Helvetica", 15, "bold"))
+camera_status = tk.Label(settings_holder, borderwidth=2, relief="solid", text="CAMERA STATUS", font=("Helvetica", 15, "bold"))
+
+wifi_status.grid(row=0, column=0, sticky="nsew", padx=10, pady=10)
+camera_status.grid(row=0, column=1, sticky="nsew", padx=10, pady=10)
+
+password_keypad = tk.Frame(root, background="gray", padx=20, pady=20)
+
+# settings menu ------------------------------------------------------------------------
+in_settings = False
+settings_menu_holder = tk.Frame(root)
+
+settings.settings = {
+    "count_line_offset": {"value": tk.IntVar(value=0), "limits": [0, 200], "tick": 10, "factor": 1},
+    "weight_estimation_m": {"value": tk.DoubleVar(value=0), "limits": [0, 200], "tick": 20, "factor": 0.0001}, # actual range: divide limits by 10,000
+    "weight_estimation_b": {"value": tk.DoubleVar(value=0), "limits": [0, 200], "tick": 20, "factor": 0.01}, # divide limits by 100
+    "match_distance": {"value": tk.IntVar(value=0), "limits": [0, 100], "tick": 10, "factor": 1},
+    "match_percent": {"value": tk.DoubleVar(value=0), "limits": [0, 100], "tick": 10, "factor": 0.01}, # divide limits by 100
+    "base_profile_translation": {"value": tk.IntVar(value=0), "limits": [0, 20], "tick": 2, "factor": 1},
+    "match_attempts": {"value": tk.IntVar(value=0), "limits": [0, 10], "tick": 1, "factor": 1}
+}
+
+# get setting values from settings file
+settings.fetch_settings()
+
+for i in range(3): settings_menu_holder.grid_columnconfigure(i, weight=1)
+for i in range(len(settings.settings)+2): settings_menu_holder.grid_rowconfigure(i, weight=1)
+
+# camera preview
+camera_preview = tk.Label(settings_menu_holder, borderwidth=2, relief="solid", text="CAMERA PREVIEW", compound="bottom", font=("Helvetica", 20, "bold"))
+camera_preview.grid(row=1, column=1, columnspan=6, rowspan=2, sticky="nsew" , padx=20, pady=20)
+
+# scales/ sliders for the settings
+scales = []
+for setting in settings.settings:
+    setting_dict = settings.settings[setting]
+    scale = tk.Scale(settings_menu_holder, label=setting, variable=setting_dict["value"],
+                     from_=setting_dict["limits"][0], to=setting_dict["limits"][1], tickinterval=setting_dict["tick"],
+                     orient=tk.HORIZONTAL)
+    scales.append(scale)
+    scale.grid(row=list(settings.settings).index(setting)+1, column=0, sticky="nsew", padx=5, pady=5)
 
 def handle_start():
     global started, operation_start
     operation_start = time()
     
     #notify
-    if started:
-        toggle_notification(3)
-    elif not started:
+    if started and cupid.camera_connected():
+        messagebox.showinfo("Error", "Operation Already Started!")
+    elif not started and cupid.camera_connected():
         started = True
-        toggle_notification(0)
+        messagebox.showinfo("Success", "Starting Operation!")
+    else:
+        messagebox.showinfo("Error", "Camera Not Connected!")
+
+# ---------------------------------------------------------------------------------------
 
 def handle_stop():
     global started, operation_end, date_count, date_weight
     
     #notify
-    if not started:
-        toggle_notification(2)
-    elif started:
+    if not started and cupid.camera_connected():
+        messagebox.showinfo("Error", "Operation Has Not Been Started!")
+    elif started and cupid.camera_connected():
         started = False
-        toggle_notification(1)
+        messagebox.showinfo("Success", "Ending Operation!")
         
         cupid.reset()
         operation_end = time()
@@ -102,38 +137,120 @@ def handle_stop():
         body = f"Operation date and end time: {date_and_time}, Dates counted: {date_count}, Estimated total weight: {round(date_weight/1000, 4)} kg"
         
         # send email to recipients
-        send_email(subject, body, get_setting("email_settings")["recipient1_email"])
-        send_email(subject, body, get_setting("email_settings")["recipient2_email"])
+        send_email(subject, body, settings.get_setting("email_settings")["recipient1_email"])
+        send_email(subject, body, settings.get_setting("email_settings")["recipient2_email"])
         
         # reset count and weight on display
         date_count = 0
         date_weight = 0
         update_count_weight()
+    else:
+        messagebox.showinfo("Error", "Camera Not Connected!")
+
+def to_settings():
+    global in_settings
+
+    in_settings = True
+    # forget main menu
+    main_holder.pack_forget()
+    # place settings menu
+    settings_menu_holder.pack(fill="both", expand=True)
+
+def show_keypad(holder, password):
+    # place keypad in root
+    holder.place(relx=0.5, rely=0.5, anchor=tk.CENTER)
+
+    # State to keep track of the entered code
+    entered_code = tk.StringVar(value="")
+
+    # Function to update the entered code
+    def add_digit(digit):
+        if len(entered_code.get()) < 4:
+            entered_code.set(entered_code.get() + str(digit))
+
+    # Function to check the password
+    def check_password():
+        if entered_code.get() == password:
+            messagebox.showinfo("Success", "Correct Password!")
+            holder.place_forget()
+            for widget in holder.winfo_children():
+                widget.destroy()
+            # go to settings menu
+            to_settings()
+        else:
+            messagebox.showerror("Error", "Incorrect Password!")
+            entered_code.set("")
+
+    # Function to clear the last digit
+    def delete_last():
+        entered_code.set(entered_code.get()[:-1])
+
+    # Function to close the keypad
+    def close_keypad():
+        holder.place_forget()
+        for widget in holder.winfo_children():
+            widget.destroy()
+
+    # Create a label to display the entered code
+    display = tk.Label(holder, textvariable=entered_code, font=("Helvetica", 24), bg="lightgray", width=10, height=2)
+    display.grid(row=0, column=0, columnspan=3, pady=10)
+
+    # Add digit buttons
+    for i in range(1, 10):
+        button = tk.Button(holder, text=str(i), font=("Helvetica", 18), width=4, height=2,
+                           command=lambda digit=i: add_digit(digit))
+        row = (i - 1) // 3 + 1
+        col = (i - 1) % 3
+        button.grid(row=row, column=col, padx=5, pady=5)
+
+    # Add a back button to clear the last digit
+    back_button = tk.Button(holder, text="←", font=("Helvetica", 18), width=4, height=2, command=delete_last)
+    back_button.grid(row=4, column=0, padx=5, pady=5)
+
+    # Add a check button to verify the code
+    check_button = tk.Button(holder, text="OK", font=("Helvetica", 18), width=4, height=2, command=check_password)
+    check_button.grid(row=4, column=1, padx=5, pady=5)
+
+    # Add a close button to exit the keypad
+    close_button = tk.Button(holder, text="Close", font=("Helvetica", 18), width=4, height=2, command=close_keypad)
+    close_button.grid(row=4, column=2, padx=5, pady=5)
+
+def handle_settings():
+    # ask user to enter password
+    show_keypad(password_keypad, "1234")
 
 # main menu buttons
 start_button = tk.Button(main_holder, text="START", bg="green", font=("Helvetica", 30, "bold"),
-                         command=handle_start)
+                        command=handle_start)
 stop_button = tk.Button(main_holder, text="STOP", bg="red", font=("Helvetica", 30, "bold"),
                         command=handle_stop)
+settings_button = tk.Button(settings_holder, text="SETTINGS", bg="gray", font=("Helvetica", 15, "bold"),
+                        command=handle_settings)
 
 start_button.grid(row=0, column=0, sticky="nsew", padx=20, pady=20)
 stop_button.grid(row=0, column=1, sticky="nsew", padx=20, pady=20)
+settings_button.grid(row=1, column=0, columnspan=2, sticky="nsew", padx=10, pady=10)
 
 def get_date_report():
     global date_count, date_weight
-    if started:
+
+    if started or in_settings:
         date_count, date_weight, date_frame = cupid.work()
         # convert date frame to tkinter image
         rgb_frame = cv2.cvtColor(date_frame, cv2.COLOR_BGR2RGB)
-        rgb_frame = cv2.resize(rgb_frame, (200, 200))
+        rgb_frame = cv2.resize(rgb_frame, (500, 500))
         pil_frame = Image.fromarray(rgb_frame)
         tk_frame = ImageTk.PhotoImage(image=pil_frame)
         # show image
-        image_label.config(image=tk_frame)
-        image_label.image = tk_frame
+        if in_settings:
+            camera_preview.config(image=tk_frame)
+            camera_preview.image = tk_frame
+        else:
+            image_label.config(image=tk_frame)
+            image_label.image = tk_frame
         root.after(DATE_REPORT_FREQ, get_date_report)
     else:
-        pil_frame = Image.fromarray(np.zeros((200, 200), dtype=np.uint8))
+        pil_frame = Image.fromarray(np.zeros((300, 300), dtype=np.uint8))
         tk_frame = ImageTk.PhotoImage(image=pil_frame)
         # show image
         image_label.config(image=tk_frame)

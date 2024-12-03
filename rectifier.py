@@ -36,8 +36,10 @@ class Rectifier:
         else:
             new_patch = (((patch - min) * (new_max - new_min))/(0.01)) + new_min
 
-        # create a mask of the object edges
-        if len(set(np.hstack(new_patch))) > 3:
+        # For an object edge with a distance differential, the patch will contain at least
+        # a couple different pixel values between 0 and 255. Isolate those edges
+        # the higher the threshold value, the less noise in the image/ the better the edge isolation
+        if len(set(np.hstack(new_patch))) > 9:
             new_patch = np.ones_like(new_patch, dtype=np.uint8) * 255
         else:
             new_patch = np.zeros_like(new_patch, dtype=np.uint8) * 0
@@ -45,7 +47,7 @@ class Rectifier:
         return new_patch
 
     def process_patches(self, patches):
-        with Pool(processes=4) as pool:
+        with Pool(processes=16) as pool:
             processed_patches = pool.map(self.rectify_patch, patches)
 
         return processed_patches
@@ -55,8 +57,10 @@ class Rectifier:
         depth_data = np.asanyarray(depth_frame.get_data())
 
         # define patches
-        p_x = list(range(self.start_x, self.end_x+1, int((self.end_x - self.start_x)/patch_depth)))
-        p_y = list(range(self.start_y, self.end_y+1, int((self.end_y - self.start_y)/patch_depth)))
+        patch_width = int((self.end_y - self.start_y)/patch_depth)
+        patch_height = int((self.end_x - self.start_x)/patch_depth) 
+        p_x = list(range(self.start_x, self.end_x + patch_height, patch_height))
+        p_y = list(range(self.start_y, self.end_y + patch_width, patch_width))
 
         # prepare image patches for processing
         patches = [depth_data[p_x[x]:p_x[x+1], p_y[y]:p_y[y+1]] for x in range(patch_depth) for y in range(patch_depth)]
@@ -70,6 +74,7 @@ class Rectifier:
 
         # apply color map
         depth_colormap = cv2.applyColorMap(np.uint8(new_depth), cv2.COLORMAP_JET)
+        print(depth_colormap.shape)
 
         return depth_colormap, new_depth
 
