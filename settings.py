@@ -3,6 +3,7 @@
 """gets and sets the system settings"""
 
 import json
+import copy
 from tkinter import DoubleVar, IntVar
 
 class Settings:
@@ -16,7 +17,7 @@ class Settings:
         Returns:
             any: the setting saved in the json file
         """
-        with open("/home/datecounter/Iris/settings.json") as setting_file:
+        with open("/home/datecounter/Iris/counter_settings.json", "r") as setting_file:
             return json.load(setting_file)[setting_name]
     
     # return setting from the class settings variable
@@ -31,9 +32,22 @@ class Settings:
     def fetch_settings(self):
         if self.settings:
             for setting in self.settings:
-                setting_value = self.get_setting(setting)
-                self.settings[setting]["value"] = DoubleVar(value=setting_value) if type(setting_value) is float else IntVar(value=setting_value)
+                setting_value = self.get_setting(setting) / self.settings[setting]["factor"]
+                self.settings[setting]["value"] = DoubleVar(value=setting_value)
         else:
             pass
+
+    def save_settings(self):
+        # convert setting values from tk variables to python variables
+        temp_settings = dict()
+        if self.settings:
+            for setting in self.settings:
+                temp_settings[setting] = self.settings[setting]["value"].get() * self.settings[setting]["factor"]
+
+            with open("/home/datecounter/Iris/counter_settings.json", "w") as setting_file:
+                json.dump(temp_settings, setting_file, indent=4)
+        else:
+            pass
+
 
 settings = Settings()

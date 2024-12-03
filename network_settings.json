@@ -1,12 +1,4 @@
 {
-    "weight_estimation_m": 45,
-    "weight_estimation_b": 4,
-    "count_line_offset": 100,
-    "match_distance": 50,
-    "match_percent": 20,
-    "base_profile_translation": 5,
-    "match_attempts": 10,
-
     "email_settings":{
         "recipient1_email": "deskcomp10@outlook.com",
         "recipient2_email": "tevin_mukudi@outlook.com"

@@ -87,11 +87,13 @@ settings.settings = {
 settings.fetch_settings()
 
 for i in range(3): settings_menu_holder.grid_columnconfigure(i, weight=1)
-for i in range(len(settings.settings)+2): settings_menu_holder.grid_rowconfigure(i, weight=1)
+for i in range(9): settings_menu_holder.grid_rowconfigure(i, weight=1)
 
 # camera preview
-camera_preview = tk.Label(settings_menu_holder, borderwidth=2, relief="solid", text="CAMERA PREVIEW", compound="bottom", font=("Helvetica", 20, "bold"))
-camera_preview.grid(row=1, column=1, columnspan=6, rowspan=2, sticky="nsew" , padx=20, pady=20)
+camera_preview_holder = tk.Frame(settings_menu_holder)
+camera_preview_holder.grid(row=1, column=2, columnspan=1, rowspan=5, sticky="nsew")
+camera_preview = tk.Label(camera_preview_holder, borderwidth=0, relief="solid", text="CAMERA PREVIEW", compound="bottom", font=("Helvetica", 20, "bold"))
+camera_preview.pack(fill="both", expand=True)
 
 # scales/ sliders for the settings
 scales = []
@@ -101,7 +103,7 @@ for setting in settings.settings:
                      from_=setting_dict["limits"][0], to=setting_dict["limits"][1], tickinterval=setting_dict["tick"],
                      orient=tk.HORIZONTAL)
     scales.append(scale)
-    scale.grid(row=list(settings.settings).index(setting)+1, column=0, sticky="nsew", padx=5, pady=5)
+    scale.grid(row=list(settings.settings).index(setting)+1, column=0, columnspan=2, sticky="nsew", padx=5, pady=5)
 
 def handle_start():
     global started, operation_start
@@ -155,6 +157,15 @@ def to_settings():
     main_holder.pack_forget()
     # place settings menu
     settings_menu_holder.pack(fill="both", expand=True)
+
+def to_main():
+    global in_settings
+
+    in_settings = False
+    # forget the settings menu
+    settings_menu_holder.pack_forget()
+    # place the main menu
+    main_holder.pack(fill="both", expand=True)
 
 def show_keypad(holder, password):
     # place keypad in root
@@ -219,6 +230,12 @@ def handle_settings():
     # ask user to enter password
     show_keypad(password_keypad, "1234")
 
+def save_settings():
+    # write current setting values to the settings json file
+    settings.save_settings()
+    # return to main menu
+    to_main()
+
 # main menu buttons
 start_button = tk.Button(main_holder, text="START", bg="green", font=("Helvetica", 30, "bold"),
                         command=handle_start)
@@ -227,9 +244,13 @@ stop_button = tk.Button(main_holder, text="STOP", bg="red", font=("Helvetica", 3
 settings_button = tk.Button(settings_holder, text="SETTINGS", bg="gray", font=("Helvetica", 15, "bold"),
                         command=handle_settings)
 
+# settings menu buttons
+save_settings_button = tk.Button(settings_menu_holder, text="SAVE", bg="green", font=("Helvetica", 20, "bold"), command=save_settings)
+
 start_button.grid(row=0, column=0, sticky="nsew", padx=20, pady=20)
 stop_button.grid(row=0, column=1, sticky="nsew", padx=20, pady=20)
 settings_button.grid(row=1, column=0, columnspan=2, sticky="nsew", padx=10, pady=10)
+save_settings_button.grid(row=5, column=2, rowspan=5, ipadx=60, ipady=30)
 
 def get_date_report():
     global date_count, date_weight

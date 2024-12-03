@@ -1,0 +1,9 @@
+{
+    "count_line_offset": 100.0,
+    "weight_estimation_m": 0.0066,
+    "weight_estimation_b": 0.04,
+    "match_distance": 50.0,
+    "match_percent": 0.2,
+    "base_profile_translation": 5.0,
+    "match_attempts": 5.0
+}

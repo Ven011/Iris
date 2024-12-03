@@ -218,7 +218,7 @@ class Cupid:
         for profile in self.base_profiles:
             cv2.putText(self.compare_frame, str(round(profile.est_weight, 1)), tuple(profile.position), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2, cv2.LINE_AA)
         # print(self.compare_frame.shape)
-        count_line = (end_x - start_x) - settings.return_setting("count_line_offset")
+        count_line = int((end_x - start_x) - settings.return_setting("count_line_offset"))
         cv2.line(self.compare_frame, (0, count_line), (end_y, count_line), (255, 255, 255), thickness=1)
         #cv2.circle(self.compare_frame, (1000, 300), 10, (255), thickness=1)
 
