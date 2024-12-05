@@ -27,8 +27,8 @@ COUNT_WEIGHT_FREQ = 200 # milliseconds between date count and weight text in the
 
 # setup tkinter
 root = tk.Tk()
-# root.attributes("-fullscreen", True)
-root.geometry("1920x1080")
+root.attributes("-fullscreen", True)
+# root.geometry("1920x1080")
 root.title("Date Counter and Weight Estimator")
 
 # main menu ------------------------------------------------------------------------
@@ -87,11 +87,11 @@ settings.settings = {
 settings.fetch_settings()
 
 for i in range(3): settings_menu_holder.grid_columnconfigure(i, weight=1)
-for i in range(9): settings_menu_holder.grid_rowconfigure(i, weight=1)
+for i in range(12): settings_menu_holder.grid_rowconfigure(i, weight=1)
 
 # camera preview
 camera_preview_holder = tk.Frame(settings_menu_holder)
-camera_preview_holder.grid(row=1, column=2, columnspan=1, rowspan=5, sticky="nsew")
+camera_preview_holder.grid(row=0, column=2, columnspan=1, rowspan=5, sticky="nsew")
 camera_preview = tk.Label(camera_preview_holder, borderwidth=0, relief="solid", text="CAMERA PREVIEW", compound="bottom", font=("Helvetica", 20, "bold"))
 camera_preview.pack(fill="both", expand=True)
 
@@ -105,6 +105,47 @@ for setting in settings.settings:
     scales.append(scale)
     scale.grid(row=list(settings.settings).index(setting)+1, column=0, columnspan=2, sticky="nsew", padx=5, pady=5)
 
+# password setting text box
+password_setting_holder = tk.Frame(settings_menu_holder)
+password_setting_holder.grid(row=5, column=2, rowspan=1, sticky="nsew")
+for i in range(8): password_setting_holder.grid_columnconfigure(i, weight=1)
+password_setting_holder.grid_rowconfigure(0, weight=1)
+
+password_setting_label = tk.Label(password_setting_holder, text="Settings Password :")
+password_setting_label.grid(column=1, row=0, columnspan=1, sticky="nsw")
+password_setting_entry = tk.Text(password_setting_holder, height=1, width=5)
+password_setting_entry.grid(column=2, row=0, columnspan=2, sticky="ew")
+
+# email setting text box
+email_setting_holder = tk.Frame(settings_menu_holder)
+email_setting_holder.grid(row=6, column=2, rowspan=1, sticky="nsew")
+for i in range(8): email_setting_holder.grid_columnconfigure(i, weight=1)
+email_setting_holder.grid_rowconfigure(0, weight=1)
+
+email_setting_label = tk.Label(email_setting_holder, text="Emails :")
+email_setting_label.grid(column=1, row=0, columnspan=1, sticky="nsw")
+email1 = tk.Text(email_setting_holder, height=1, width=5)
+email2 = tk.Text(email_setting_holder, height=1, width=5)
+email1.grid(column=2, row=0, columnspan=2, sticky="ew")
+email2.grid(column=5, row=0, columnspan=2, sticky="ew")
+
+# wifi setting text boxes
+wifi_setting_holder = tk.Frame(settings_menu_holder)
+wifi_setting_holder.grid(row=7, column=2, rowspan=2, sticky="nsew")
+for i in range(8): wifi_setting_holder.grid_columnconfigure(i, weight=1)
+for i in range(2): wifi_setting_holder.grid_rowconfigure(i, weight=1)
+
+wifi_ssid_label = tk.Label(wifi_setting_holder, text="WiFi SSID:")
+wifi_pass_label = tk.Label(wifi_setting_holder, text="WiFi Password:")
+wifi_ssid_label.grid(column=1, row=0, columnspan=1, sticky="nsw")
+wifi_pass_label.grid(column=1, row=1, columnspan=1, sticky="nsw")
+wifi_ssid_entry = tk.Text(wifi_setting_holder, height=1, width=5)
+wifi_pass_entry = tk.Text(wifi_setting_holder, height=1, width=5)
+wifi_ssid_entry.grid(column=2, row=0, columnspan=3, sticky="ew")
+wifi_pass_entry.grid(column=2, row=1, columnspan=3, sticky="ew")
+
+# ---------------------------------------------------------------------------------------
+
 def handle_start():
     global started, operation_start
     operation_start = time()
@@ -117,8 +158,6 @@ def handle_start():
         messagebox.showinfo("Success", "Starting Operation!")
     else:
         messagebox.showinfo("Error", "Camera Not Connected!")
-
-# ---------------------------------------------------------------------------------------
 
 def handle_stop():
     global started, operation_end, date_count, date_weight
@@ -250,7 +289,7 @@ save_settings_button = tk.Button(settings_menu_holder, text="SAVE", bg="green", 
 start_button.grid(row=0, column=0, sticky="nsew", padx=20, pady=20)
 stop_button.grid(row=0, column=1, sticky="nsew", padx=20, pady=20)
 settings_button.grid(row=1, column=0, columnspan=2, sticky="nsew", padx=10, pady=10)
-save_settings_button.grid(row=5, column=2, rowspan=5, ipadx=60, ipady=30)
+save_settings_button.grid(row=9, column=2, rowspan=2, ipadx=60, ipady=30)
 
 def get_date_report():
     global date_count, date_weight

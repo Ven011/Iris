@@ -1,6 +1,6 @@
 {
-    "count_line_offset": 100.0,
-    "weight_estimation_m": 0.0066,
+    "count_line_offset": 79.0,
+    "weight_estimation_m": 0.007500000000000001,
     "weight_estimation_b": 0.04,
     "match_distance": 50.0,
     "match_percent": 0.2,
