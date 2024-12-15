@@ -3,6 +3,7 @@
 import cv2
 import tkinter as tk
 import numpy as np
+import json
 
 from tkinter import messagebox
 from cupid import Cupid
@@ -10,7 +11,8 @@ from PIL import Image, ImageTk
 from settings import settings
 from datetime import datetime
 from time import time
-from email_sender import send_email
+from email_sender import sender
+from wifi_config import update_wifi_settings
 
 cupid = Cupid()
 
@@ -57,15 +59,14 @@ weight_label.grid(row=2, column=0, columnspan=2, sticky="nsew", padx=20, pady=20
 settings_holder = tk.Label(main_holder)
 settings_holder.grid(row=0, column=2, sticky="nsew", columnspan=1, padx=20, pady=20)
 
-for i in range(2):
-    settings_holder.grid_columnconfigure(i, weight=1, uniform="equal")
-    settings_holder.grid_rowconfigure(i, weight=1, uniform="equal")
+settings_holder.grid_columnconfigure(0, weight=1, uniform="equal")
+settings_holder.grid_rowconfigure(0, weight=1, uniform="equal")
 
-wifi_status = tk.Label(settings_holder, borderwidth=2, relief="solid", text="WiFi STATUS", font=("Helvetica", 15, "bold"))
-camera_status = tk.Label(settings_holder, borderwidth=2, relief="solid", text="CAMERA STATUS", font=("Helvetica", 15, "bold"))
+# wifi_status = tk.Label(settings_holder, borderwidth=2, relief="solid", text="WiFi STATUS", font=("Helvetica", 15, "bold"))
+# camera_status = tk.Label(settings_holder, borderwidth=2, relief="solid", text="CAMERA STATUS", font=("Helvetica", 15, "bold"))
 
-wifi_status.grid(row=0, column=0, sticky="nsew", padx=10, pady=10)
-camera_status.grid(row=0, column=1, sticky="nsew", padx=10, pady=10)
+# wifi_status.grid(row=0, column=0, sticky="nsew", padx=10, pady=10)
+# camera_status.grid(row=0, column=1, sticky="nsew", padx=10, pady=10)
 
 password_keypad = tk.Frame(root, background="gray", padx=20, pady=20)
 
@@ -84,7 +85,7 @@ settings.settings = {
 }
 
 # get setting values from settings file
-settings.fetch_settings()
+settings.fetch_counter_settings()
 
 for i in range(3): settings_menu_holder.grid_columnconfigure(i, weight=1)
 for i in range(12): settings_menu_holder.grid_rowconfigure(i, weight=1)
@@ -111,8 +112,8 @@ password_setting_holder.grid(row=5, column=2, rowspan=1, sticky="nsew")
 for i in range(8): password_setting_holder.grid_columnconfigure(i, weight=1)
 password_setting_holder.grid_rowconfigure(0, weight=1)
 
-password_setting_label = tk.Label(password_setting_holder, text="Settings Password :")
-password_setting_label.grid(column=1, row=0, columnspan=1, sticky="nsw")
+password_setting_label = tk.Label(password_setting_holder, text="Settings Password (4 numbers, 1-9 only):")
+password_setting_label.grid(column=1, row=0, columnspan=1, sticky="nse")
 password_setting_entry = tk.Text(password_setting_holder, height=1, width=5)
 password_setting_entry.grid(column=2, row=0, columnspan=2, sticky="ew")
 
@@ -123,28 +124,39 @@ for i in range(8): email_setting_holder.grid_columnconfigure(i, weight=1)
 email_setting_holder.grid_rowconfigure(0, weight=1)
 
 email_setting_label = tk.Label(email_setting_holder, text="Emails :")
-email_setting_label.grid(column=1, row=0, columnspan=1, sticky="nsw")
+email_setting_label.grid(column=1, row=0, columnspan=1, sticky="nse")
 email1 = tk.Text(email_setting_holder, height=1, width=5)
 email2 = tk.Text(email_setting_holder, height=1, width=5)
 email1.grid(column=2, row=0, columnspan=2, sticky="ew")
-email2.grid(column=5, row=0, columnspan=2, sticky="ew")
+email2.grid(column=4, row=0, columnspan=2, sticky="ew")
 
-# wifi setting text boxes
-wifi_setting_holder = tk.Frame(settings_menu_holder)
-wifi_setting_holder.grid(row=7, column=2, rowspan=2, sticky="nsew")
-for i in range(8): wifi_setting_holder.grid_columnconfigure(i, weight=1)
-for i in range(2): wifi_setting_holder.grid_rowconfigure(i, weight=1)
+# # wifi setting text boxes
+# wifi_setting_holder = tk.Frame(settings_menu_holder)
+# wifi_setting_holder.grid(row=7, column=2, rowspan=2, sticky="nsew")
+# for i in range(8): wifi_setting_holder.grid_columnconfigure(i, weight=1)
+# for i in range(2): wifi_setting_holder.grid_rowconfigure(i, weight=1)
 
-wifi_ssid_label = tk.Label(wifi_setting_holder, text="WiFi SSID:")
-wifi_pass_label = tk.Label(wifi_setting_holder, text="WiFi Password:")
-wifi_ssid_label.grid(column=1, row=0, columnspan=1, sticky="nsw")
-wifi_pass_label.grid(column=1, row=1, columnspan=1, sticky="nsw")
-wifi_ssid_entry = tk.Text(wifi_setting_holder, height=1, width=5)
-wifi_pass_entry = tk.Text(wifi_setting_holder, height=1, width=5)
-wifi_ssid_entry.grid(column=2, row=0, columnspan=3, sticky="ew")
-wifi_pass_entry.grid(column=2, row=1, columnspan=3, sticky="ew")
+# wifi_ssid_label = tk.Label(wifi_setting_holder, text="WiFi SSID:")
+# wifi_pass_label = tk.Label(wifi_setting_holder, text="WiFi Password:")
+# wifi_ssid_label.grid(column=1, row=0, columnspan=1, sticky="nse")
+# wifi_pass_label.grid(column=1, row=1, columnspan=1, sticky="nse")
+# wifi_ssid_entry = tk.Text(wifi_setting_holder, height=1, width=5)
+# wifi_pass_entry = tk.Text(wifi_setting_holder, height=1, width=5)
+# wifi_ssid_entry.grid(column=2, row=0, columnspan=3, sticky="ew")
+# wifi_pass_entry.grid(column=2, row=1, columnspan=3, sticky="ew")
+
+settings.fetch_network_settings()
 
 # ---------------------------------------------------------------------------------------
+
+def update_network_settings():
+    ns = settings.network_settings
+
+    password_setting_entry.replace("1.0", "end", ns["settings_password"])
+    email1.replace("1.0", "end", ns["recipient1_email"])
+    email2.replace("1.0", "end", ns["recipient2_email"])
+    # wifi_ssid_entry.replace("1.0", "end", ns["wifi_ssid"])
+    # wifi_pass_entry.replace("1.0", "end", ns["wifi_password"])
 
 def handle_start():
     global started, operation_start
@@ -158,6 +170,8 @@ def handle_start():
         messagebox.showinfo("Success", "Starting Operation!")
     else:
         messagebox.showinfo("Error", "Camera Not Connected!")
+        messagebox.showinfo("", "Attempting Camera Reconnect...")
+        cupid.attempt_camera_reconnect()
 
 def handle_stop():
     global started, operation_end, date_count, date_weight
@@ -178,8 +192,10 @@ def handle_stop():
         body = f"Operation date and end time: {date_and_time}, Dates counted: {date_count}, Estimated total weight: {round(date_weight/1000, 4)} kg"
         
         # send email to recipients
-        send_email(subject, body, settings.get_setting("email_settings")["recipient1_email"])
-        send_email(subject, body, settings.get_setting("email_settings")["recipient2_email"])
+        sender.email_body = body
+        sender.email_subject = subject
+        sender.email_recipients = [settings.network_settings[f"recipient{num}_email"] for num in range(1,3)]
+        sender.start_emailing()
         
         # reset count and weight on display
         date_count = 0
@@ -194,6 +210,8 @@ def to_settings():
     in_settings = True
     # forget main menu
     main_holder.pack_forget()
+    # update network settings values
+    update_network_settings()
     # place settings menu
     settings_menu_holder.pack(fill="both", expand=True)
 
@@ -206,9 +224,9 @@ def to_main():
     # place the main menu
     main_holder.pack(fill="both", expand=True)
 
-def show_keypad(holder, password):
+def show_keypad():
     # place keypad in root
-    holder.place(relx=0.5, rely=0.5, anchor=tk.CENTER)
+    password_keypad.place(relx=0.5, rely=0.5, anchor=tk.CENTER)
 
     # State to keep track of the entered code
     entered_code = tk.StringVar(value="")
@@ -220,10 +238,10 @@ def show_keypad(holder, password):
 
     # Function to check the password
     def check_password():
-        if entered_code.get() == password:
+        if entered_code.get() == settings.network_settings["settings_password"]:
             messagebox.showinfo("Success", "Correct Password!")
-            holder.place_forget()
-            for widget in holder.winfo_children():
+            password_keypad.place_forget()
+            for widget in password_keypad.winfo_children():
                 widget.destroy()
             # go to settings menu
             to_settings()
@@ -237,68 +255,74 @@ def show_keypad(holder, password):
 
     # Function to close the keypad
     def close_keypad():
-        holder.place_forget()
-        for widget in holder.winfo_children():
+        password_keypad.place_forget()
+        for widget in password_keypad.winfo_children():
             widget.destroy()
 
     # Create a label to display the entered code
-    display = tk.Label(holder, textvariable=entered_code, font=("Helvetica", 24), bg="lightgray", width=10, height=2)
+    display = tk.Label(password_keypad, textvariable=entered_code, font=("Helvetica", 24), bg="lightgray", width=10, height=2)
     display.grid(row=0, column=0, columnspan=3, pady=10)
 
     # Add digit buttons
     for i in range(1, 10):
-        button = tk.Button(holder, text=str(i), font=("Helvetica", 18), width=4, height=2,
+        button = tk.Button(password_keypad, text=str(i), font=("Helvetica", 18), width=4, height=2,
                            command=lambda digit=i: add_digit(digit))
         row = (i - 1) // 3 + 1
         col = (i - 1) % 3
         button.grid(row=row, column=col, padx=5, pady=5)
 
     # Add a back button to clear the last digit
-    back_button = tk.Button(holder, text="←", font=("Helvetica", 18), width=4, height=2, command=delete_last)
+    back_button = tk.Button(password_keypad, text="←", font=("Helvetica", 18), width=4, height=2, command=delete_last)
     back_button.grid(row=4, column=0, padx=5, pady=5)
 
     # Add a check button to verify the code
-    check_button = tk.Button(holder, text="OK", font=("Helvetica", 18), width=4, height=2, command=check_password)
+    check_button = tk.Button(password_keypad, text="OK", font=("Helvetica", 18), width=4, height=2, command=check_password)
     check_button.grid(row=4, column=1, padx=5, pady=5)
 
     # Add a close button to exit the keypad
-    close_button = tk.Button(holder, text="Close", font=("Helvetica", 18), width=4, height=2, command=close_keypad)
+    close_button = tk.Button(password_keypad, text="Close", font=("Helvetica", 18), width=4, height=2, command=close_keypad)
     close_button.grid(row=4, column=2, padx=5, pady=5)
 
 def handle_settings():
     # ask user to enter password
-    show_keypad(password_keypad, "1234")
+    show_keypad()
 
 def save_settings():
-    # write current setting values to the settings json file
-    settings.save_settings()
+    # write counter setting values to the settings json file
+    settings.save_counter_settings()
+    # write network settings values to the network settings json file
+    ns = settings.network_settings
+
+    ns["settings_password"] = password_setting_entry.get("1.0", "end-1c")
+    ns["recipient1_email"] = email1.get("1.0", "end-1c")
+    ns["recipient2_email"] = email2.get("1.0", "end-1c")
+    # ns["wifi_ssid"] = wifi_ssid_entry.get("1.0", "end-1c")
+    # ns["wifi_password"] = wifi_pass_entry.get("1.0", "end-1c")
+
+    with open("/home/datecounter/Iris/network_settings.json", "w") as setting_file:
+        json.dump(ns, setting_file, indent=4)
+
     # return to main menu
     to_main()
 
-# main menu buttons
-start_button = tk.Button(main_holder, text="START", bg="green", font=("Helvetica", 30, "bold"),
-                        command=handle_start)
-stop_button = tk.Button(main_holder, text="STOP", bg="red", font=("Helvetica", 30, "bold"),
-                        command=handle_stop)
-settings_button = tk.Button(settings_holder, text="SETTINGS", bg="gray", font=("Helvetica", 15, "bold"),
-                        command=handle_settings)
+def handle_camera_disconnect():
+    global started
 
-# settings menu buttons
-save_settings_button = tk.Button(settings_menu_holder, text="SAVE", bg="green", font=("Helvetica", 20, "bold"), command=save_settings)
+    if not cupid.camera_connected():
+        started = False
+        messagebox.showinfo("Error", "Camera Disconnected!")
 
-start_button.grid(row=0, column=0, sticky="nsew", padx=20, pady=20)
-stop_button.grid(row=0, column=1, sticky="nsew", padx=20, pady=20)
-settings_button.grid(row=1, column=0, columnspan=2, sticky="nsew", padx=10, pady=10)
-save_settings_button.grid(row=9, column=2, rowspan=2, ipadx=60, ipady=30)
 
 def get_date_report():
     global date_count, date_weight
+    # handle camera disconnect
+    handle_camera_disconnect()
 
     if started or in_settings:
         date_count, date_weight, date_frame = cupid.work()
         # convert date frame to tkinter image
         rgb_frame = cv2.cvtColor(date_frame, cv2.COLOR_BGR2RGB)
-        rgb_frame = cv2.resize(rgb_frame, (500, 500))
+        rgb_frame = cv2.resize(rgb_frame, (400, 400))
         pil_frame = Image.fromarray(rgb_frame)
         tk_frame = ImageTk.PhotoImage(image=pil_frame)
         # show image
@@ -309,8 +333,9 @@ def get_date_report():
             image_label.config(image=tk_frame)
             image_label.image = tk_frame
         root.after(DATE_REPORT_FREQ, get_date_report)
+
     else:
-        pil_frame = Image.fromarray(np.zeros((300, 300), dtype=np.uint8))
+        pil_frame = Image.fromarray(np.zeros((400, 400), dtype=np.uint8))
         tk_frame = ImageTk.PhotoImage(image=pil_frame)
         # show image
         image_label.config(image=tk_frame)
@@ -332,8 +357,24 @@ def close_interface(event):
 def exit_fullscreen(event):
     root.attributes("-fullscreen", False)
 
-root.bind("q", close_interface)
-root.bind("f", exit_fullscreen)
+# main menu buttons
+start_button = tk.Button(main_holder, text="START", bg="green", font=("Helvetica", 30, "bold"),
+                        command=handle_start)
+stop_button = tk.Button(main_holder, text="STOP", bg="red", font=("Helvetica", 30, "bold"),
+                        command=handle_stop)
+settings_button = tk.Button(settings_holder, text="SETTINGS", bg="gray", font=("Helvetica", 25, "bold"),
+                        command=handle_settings)
+
+# settings menu buttons
+save_settings_button = tk.Button(settings_menu_holder, text="SAVE", bg="green", font=("Helvetica", 20, "bold"), command=save_settings)
+
+start_button.grid(row=0, column=0, sticky="nsew", padx=20, pady=20)
+stop_button.grid(row=0, column=1, sticky="nsew", padx=20, pady=20)
+settings_button.grid(row=0, column=0, columnspan=1, sticky="nsew")
+save_settings_button.grid(row=9, column=2, rowspan=2, ipadx=60, ipady=30)
+
+root.bind("=", close_interface)
+root.bind("-", exit_fullscreen)
 
 root.after(DATE_REPORT_FREQ, get_date_report)
 root.after(COUNT_WEIGHT_FREQ, update_count_weight)
