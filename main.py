@@ -12,7 +12,6 @@ from settings import settings
 from datetime import datetime
 from time import time
 from email_sender import sender
-from wifi_config import update_wifi_settings
 
 cupid = Cupid()
 
@@ -24,7 +23,7 @@ started = False
 operation_start = 0
 operation_end = 0
 
-DATE_REPORT_FREQ = 200 # milliseconds between consecutive date reports
+DATE_REPORT_FREQ = 10 # milliseconds between consecutive date reports
 COUNT_WEIGHT_FREQ = 200 # milliseconds between date count and weight text in the main menu
 
 # setup tkinter
@@ -319,7 +318,9 @@ def get_date_report():
     handle_camera_disconnect()
 
     if started or in_settings:
+        init_t = time()
         date_count, date_weight, date_frame = cupid.work()
+        print(time() - init_t)
         # convert date frame to tkinter image
         rgb_frame = cv2.cvtColor(date_frame, cv2.COLOR_BGR2RGB)
         rgb_frame = cv2.resize(rgb_frame, (400, 400))

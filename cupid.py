@@ -92,6 +92,11 @@ class Cupid:
         self.compare_profiles = list()
         self.compare_frame = None
 
+        # date matching variables
+        self.match_profile = None
+        self.match_profile_angle = None
+        self.match_profile_distance = None
+
         # date counting variables
         self.counted = [] # list of date IDs that have been counted
         self.counted_last_empty_time = time()
@@ -108,7 +113,7 @@ class Cupid:
     def refine_weights(self, profiles):
         refined_profiles = None
 
-        with Pool(processes=16) as pool:
+        with Pool(processes=1) as pool:
             refined_profiles = pool.map(refine, profiles)
 
         return refined_profiles
@@ -173,10 +178,25 @@ class Cupid:
     def get_compare_profiles(self):
         self.compare_profiles, self.compare_frame = self.detect_dates()
 
+    def get_angle_and_distance(self, base_profile, compare_profile):
+        # create a vector that represents the ideal direction of the date's movement
+        base_position = base_profile.position
+        ideal_date_position = np.array([base_position[0], base_position[1]+10])
+        ideal_vector = ideal_date_position - base_position
+        ideal_vector_mag = np.linalg.norm(ideal_vector)
+
+        # create a vector between the base profile and the current compare profile
+        compare_vector = compare_profile.position - base_position
+        compare_vector_mag = np.linalg.norm(compare_vector)
+
+        # calculate the angle between the ideal vector and the compare vector
+        compare_angle = np.arccos((np.dot(ideal_vector, compare_vector)) / (ideal_vector_mag * compare_vector_mag))
+
+        return compare_angle, compare_vector_mag
+
     def find_matches(self):
         matches = 0
         self.match_attempts += 1
-        # find distance between frame one profiles and frame two profiles
         for base_profile in self.base_profiles:
             for compare_profile in self.compare_profiles:
                 distance = np.linalg.norm(base_profile.position - compare_profile.position)
@@ -191,17 +211,8 @@ class Cupid:
                     matches += 1
                     break
 
-        if matches <= len(self.base_profiles) * settings.return_counter_setting("match_percent"): # not successful, increment base profile position
-            for base_profile in self.base_profiles:
-                base_profile.position[1] += settings.return_counter_setting("base_profile_translation")
-            # attempt to find match again if within allowed iterations
-            if self.match_attempts <= settings.return_counter_setting("match_attempts"):
-                # clear compare profile ids and reset variables
-                for profile in self.compare_profiles: profile.id = None
-                for profile in self.base_profiles: profile.matched = False
-                self.find_matches()
-            else:
-                return False
+        if matches <= len(self.base_profiles) * settings.return_counter_setting("match_percent"): # not successful
+            return False
         else: # successful! create new profiles
             return True
 
