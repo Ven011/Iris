@@ -209,7 +209,7 @@ class Cupid:
         count_line = (end_x - start_x) - settings.return_counter_setting("count_line_offset")
 
         # take care of profiles that have passed the count line
-        for profile in self.base_profiles:
+        for profile in self.compare_profiles:
             if profile.position[1] > count_line and profile.id is not None and profile.id not in self.counted:
                 self.counted.append(profile.id)
                 self.count+=1
@@ -220,7 +220,7 @@ class Cupid:
                         c_profile.id = None
 
         self.base_profiles = list()
-        # assign ids to matched profiles in the compare list
+        # assign ids to unmatched profiles in the compare list
         for profile in self.compare_profiles:
             if profile.id == None and profile.position[1] < count_line:
                 profile.id = self.profile_counter
@@ -246,7 +246,7 @@ class Cupid:
             self.base_profiles, _ = self.detect_dates()
 
         for profile in self.base_profiles:
-            cv2.putText(self.compare_frame, str(round(profile.est_weight, 1)), tuple(profile.position), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2, cv2.LINE_AA)
+            cv2.putText(self.compare_frame, str(profile.id), tuple(profile.position), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2, cv2.LINE_AA)
 
         count_line = int((end_x - start_x) - settings.return_counter_setting("count_line_offset"))
         cv2.line(self.compare_frame, (0, count_line), (end_y, count_line), (255, 255, 255), thickness=1)
