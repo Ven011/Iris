@@ -197,6 +197,7 @@ class Cupid:
     def find_matches(self):
         matches = 0
         self.match_attempts += 1
+        # find distance between frame one profiles and frame two profiles
         for base_profile in self.base_profiles:
             for compare_profile in self.compare_profiles:
                 distance = np.linalg.norm(base_profile.position - compare_profile.position)
@@ -212,7 +213,16 @@ class Cupid:
                     break
 
         if matches <= len(self.base_profiles) * settings.return_counter_setting("match_percent"): # not successful
-            return False
+            # attempt to find match again if within allowed iterations
+            if self.match_attempts <= settings.return_counter_setting("match_attempts"):
+                for base_profile in self.base_profiles: # increment base profile position
+                    base_profile.position[1] += settings.return_counter_setting("base_profile_translation")
+                # clear compare profile ids and reset variables
+                for profile in self.compare_profiles: profile.id = None
+                for profile in self.base_profiles: profile.matched = False
+                self.find_matches()
+            else:
+                return False
         else: # successful! create new profiles
             return True
 

@@ -79,8 +79,8 @@ settings.settings = {
     "weight_estimation_b": {"value": tk.DoubleVar(value=0), "limits": [0, 200], "tick": 20, "factor": 0.01}, # divide limits by 100
     "match_distance": {"value": tk.IntVar(value=0), "limits": [0, 100], "tick": 10, "factor": 1},
     "match_percent": {"value": tk.DoubleVar(value=0), "limits": [0, 100], "tick": 10, "factor": 0.01}, # divide limits by 100
-    "base_profile_translation": {"value": tk.IntVar(value=0), "limits": [0, 20], "tick": 2, "factor": 1},
-    "match_attempts": {"value": tk.IntVar(value=0), "limits": [0, 10], "tick": 1, "factor": 1}
+    "base_profile_translation": {"value": tk.IntVar(value=0), "limits": [0, 25], "tick": 2, "factor": 1},
+    "match_attempts": {"value": tk.IntVar(value=0), "limits": [0, 30], "tick": 1, "factor": 1}
 }
 
 # get setting values from settings file
@@ -128,21 +128,6 @@ email1 = tk.Text(email_setting_holder, height=1, width=5)
 email2 = tk.Text(email_setting_holder, height=1, width=5)
 email1.grid(column=2, row=0, columnspan=2, sticky="ew")
 email2.grid(column=4, row=0, columnspan=2, sticky="ew")
-
-# # wifi setting text boxes
-# wifi_setting_holder = tk.Frame(settings_menu_holder)
-# wifi_setting_holder.grid(row=7, column=2, rowspan=2, sticky="nsew")
-# for i in range(8): wifi_setting_holder.grid_columnconfigure(i, weight=1)
-# for i in range(2): wifi_setting_holder.grid_rowconfigure(i, weight=1)
-
-# wifi_ssid_label = tk.Label(wifi_setting_holder, text="WiFi SSID:")
-# wifi_pass_label = tk.Label(wifi_setting_holder, text="WiFi Password:")
-# wifi_ssid_label.grid(column=1, row=0, columnspan=1, sticky="nse")
-# wifi_pass_label.grid(column=1, row=1, columnspan=1, sticky="nse")
-# wifi_ssid_entry = tk.Text(wifi_setting_holder, height=1, width=5)
-# wifi_pass_entry = tk.Text(wifi_setting_holder, height=1, width=5)
-# wifi_ssid_entry.grid(column=2, row=0, columnspan=3, sticky="ew")
-# wifi_pass_entry.grid(column=2, row=1, columnspan=3, sticky="ew")
 
 settings.fetch_network_settings()
 
@@ -318,9 +303,7 @@ def get_date_report():
     handle_camera_disconnect()
 
     if started or in_settings:
-        init_t = time()
         date_count, date_weight, date_frame = cupid.work()
-        print(time() - init_t)
         # convert date frame to tkinter image
         rgb_frame = cv2.cvtColor(date_frame, cv2.COLOR_BGR2RGB)
         rgb_frame = cv2.resize(rgb_frame, (400, 400))
