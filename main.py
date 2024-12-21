@@ -344,7 +344,7 @@ def exit_fullscreen(event):
 # main menu buttons
 start_button = tk.Button(main_holder, text="START", bg="green", font=("Helvetica", 30, "bold"),
                         command=handle_start)
-stop_button = tk.Button(main_holder, text="STOP", bg="white", font=("Helvetica", 30, "bold"),
+stop_button = tk.Button(main_holder, text="STOP", bg="red", font=("Helvetica", 30, "bold"),
                         command=handle_stop)
 settings_button = tk.Button(settings_holder, text="SETTINGS", bg="gray", font=("Helvetica", 25, "bold"),
                         command=handle_settings)
