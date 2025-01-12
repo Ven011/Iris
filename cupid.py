@@ -197,12 +197,15 @@ class Cupid:
     def find_matches(self):
         matches = 0
         self.match_attempts += 1
-        # find distance between frame one profiles and frame two profiles
+        # match based on relative distance
         for base_profile in self.base_profiles:
             for compare_profile in self.compare_profiles:
-                distance = np.linalg.norm(base_profile.position - compare_profile.position)
+                # calculate distances between the dates
+                x_distance = abs(base_profile.position[0] - compare_profile.position[0])
+                y_distance = abs(base_profile.position[1] - compare_profile.position[1])
                 # match found?
-                if distance <= settings.return_counter_setting("match_distance"): # yes
+                match_distance = settings.return_counter_setting("match_distance")
+                if y_distance <= match_distance and x_distance <= match_distance / 3: # yes
                     # transfer profile id 
                     compare_profile.id = base_profile.id
                     # stop updating the weight if the compare profile is past the "count line"
