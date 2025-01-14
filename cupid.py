@@ -36,7 +36,7 @@ except RuntimeError as e:
     camera_connected = False
 
 class Date_Profile:
-    def __init__(self, id=None, appx_area=None, est_weight=None, position=None):
+    def __init__(self, id=None, appx_area=None, est_weight=0, position=None):
         self.id = id
         self.appx_area = appx_area
         self.est_weight = est_weight
@@ -270,7 +270,7 @@ class Cupid:
             self.base_profiles, _ = self.detect_dates()
 
         for profile in self.base_profiles:
-            cv2.putText(self.compare_frame, str(profile.id), tuple(profile.position), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2, cv2.LINE_AA)
+            cv2.putText(self.compare_frame, str(round(profile.est_weight, 1)), tuple(profile.position), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2, cv2.LINE_AA)
 
         count_line = int((end_x - start_x) - settings.return_counter_setting("count_line_offset"))
         cv2.line(self.compare_frame, (0, count_line), (end_y, count_line), (255, 255, 255), thickness=1)
