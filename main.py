@@ -173,7 +173,7 @@ def handle_stop():
         # send email with date count, total weight, count start and end times
         subject = "Date Counter Report"
         date_and_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        body = f"Operation date and end time: {date_and_time}, Dates counted: {date_count}, Estimated total weight: {round(date_weight/1000, 4)} kg"
+        body = f"Operation date and end time: {date_and_time}, Dates counted: {date_count}, Estimated total weight: {round((date_weight/1000) * 2.204622, 4)} lbs"
         
         # send email to recipients
         sender.email_body = body
@@ -328,7 +328,7 @@ def get_date_report():
 
 def update_count_weight():
     count_text = "COUNT: " + str(float(date_count)) + " dates"
-    weight_text = "WEIGHT: " + str(round(float(date_weight/1000), 2)) + " kg"
+    weight_text = "WEIGHT: " + str(round(float(date_weight/1000) * 2.204622, 2)) + " lbs"
     count_label.config(text = count_text)
     weight_label.config(text = weight_text)
 
