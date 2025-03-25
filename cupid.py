@@ -229,6 +229,9 @@ class Cupid:
         else: # successful! create new profiles
             return True
 
+    def custom_round(self, n):
+        return int(n) + (1 if (n - int(n)) >= 0.5 else 0)
+
     def handle_matches(self):
         count_line = (end_x - start_x) - settings.return_counter_setting("count_line_offset")
 
@@ -236,7 +239,7 @@ class Cupid:
         for profile in self.compare_profiles:
             if profile.position[1] > count_line and profile.id is not None and profile.id not in self.counted:
                 self.counted.append(profile.id)
-                self.count+=1
+                self.count+=self.custom_round((profile.est_weight/20)) # 20 = maximum deviation from mean weight of 18 grams
                 self.weight+=profile.est_weight
                 # reflect that the profile has been counted in the compare profiles
                 for c_profile in self.compare_profiles:
